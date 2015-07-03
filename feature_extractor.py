@@ -13,16 +13,14 @@ class FeatureExtractor(object):
         path = os.path.dirname(__file__)
         data_weather = pd.read_csv(os.path.join(path, "data_weather.csv"))
         X_weather = data_weather[['Date', 'AirPort', 'Max TemperatureC']]
-        X_weather = X_weather.rename(columns={'Date': 'DateOfDeparture', 'AirPort': 'Arrival'})
-        X_encoded = X_encoded.set_index(['DateOfDeparture', 'Arrival'])
-        X_weather = X_weather.set_index(['DateOfDeparture', 'Arrival'])
-        X_encoded = X_encoded.join(X_weather).reset_index()
-        
+        X_encoded = X_encoded.merge(X_weather, how='left',
+            left_on=['DateOfDeparture', 'Arrival'], 
+            right_on=['Date', 'AirPort'], sort=False)
+         
         X_encoded = X_encoded.join(pd.get_dummies(X_encoded['Departure'], prefix='d'))
         X_encoded = X_encoded.join(pd.get_dummies(X_encoded['Arrival'], prefix='a'))
-        X_encoded = X_encoded.drop('Departure', axis=1)
-        X_encoded = X_encoded.drop('Arrival', axis=1)
+        X_encoded = X_encoded.drop(['Arrival', 'Departure', 
+            'DateOfDeparture', 'Date', 'AirPort'], axis=1)
 
-        X_encoded = X_encoded.drop('DateOfDeparture', axis=1)
         X_array = X_encoded.values
         return X_array
